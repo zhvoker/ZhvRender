@@ -10,6 +10,8 @@ if(POLICY CMP0072)
     cmake_policy(SET CMP0072 OLD)
 endif()
 
+set(CMAKE_BUILD_TYPE Debug)
+
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
