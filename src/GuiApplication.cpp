@@ -110,6 +110,14 @@ void GuiApplication::Run()
     while (!glfwWindowShouldClose(m_window))
 #endif
     {
+        // 处理输入事件
+        glfwPollEvents();
+        if(glfwGetWindowAttrib(m_window, GLFW_ICONIFIED) != 0)
+        {
+            ImGui_ImplGlfw_Sleep(10);
+            return;
+        }
+        
         ProcessFrame();
     }
 #ifdef __EMSCRIPTEN__
@@ -119,14 +127,6 @@ void GuiApplication::Run()
 
 void GuiApplication::ProcessFrame()
 {
-    // 处理输入事件
-    glfwPollEvents();
-    if(glfwGetWindowAttrib(m_window, GLFW_ICONIFIED) != 0)
-    {
-        ImGui_ImplGlfw_Sleep(10);
-        return;
-    }
-
     // 新的渲染帧
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -144,15 +144,17 @@ void GuiApplication::ProcessFrame()
 
     // 开启渲染
     ImGui::Render();
+    // 获取屏幕帧缓冲区大小
     int display_w, display_h;
     glfwGetFramebufferSize(m_window, &display_w, &display_h);
     glViewport(0, 0, display_w, display_h);
-    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+    // 设置背景颜色并设置
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
     renderer.Render();
-
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    
     // 切换缓冲区
     glfwSwapBuffers(m_window);
 }
