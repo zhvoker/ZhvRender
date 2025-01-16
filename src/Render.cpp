@@ -6,14 +6,16 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image/stb_image.h>
 #include <stb_image/stb_image_write.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <GL/glu.h>
 
 #include "Render.h"
 #include "Shader.h"
 
-Renderer::Renderer(){}
-
 Renderer::~Renderer(){
-    CleanUp();
+    this->CleanUp();
 }
 
 void Renderer::CleanUp()
@@ -23,23 +25,17 @@ void Renderer::CleanUp()
     glDeleteBuffers(1, &EBO);
 }
 
-void Renderer::Initiaize()
+void Renderer::Initialize()
 {
-    // glad 初始化
-    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to init GLAD" << std::endl;
-    }
-
     m_shader = std::make_unique<Shader> ("../src/GLSL/vertex.vs", "../src/GLSL/fragment.fs");
 
     // 准备顶点
     float vertices[] = {
-        // positions          // colors           // texture coords
-         0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f, // top right
-         0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f, // bottom right
-        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f, // bottom left
-        -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f  // top left 
+        // positions          // texture coords
+         0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+         0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left 
     };
 
     unsigned int indices[] = {
@@ -59,12 +55,10 @@ void Renderer::Initiaize()
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);   
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);   
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
-    glEnableVertexAttribArray(2);   
 
     // 创建纹理，绑定纹理
     glGenTextures(1, &texture1);
@@ -75,7 +69,7 @@ void Renderer::Initiaize()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // 配置纹理的过滤
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
     int width, height, nrChannels;
@@ -86,7 +80,10 @@ void Renderer::Initiaize()
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
-        std::cout << "bind success" << std::endl;
+        GLenum error = glGetError();
+        if(error != GL_NO_ERROR){
+            std::cout << "Error loading texture: " << gluErrorString(error) << std::endl;
+        }
     }
     else
     {
@@ -103,7 +100,7 @@ void Renderer::Initiaize()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // 配置纹理的过滤
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 
     data = stbi_load(std::filesystem::path("../assets/awesomeface.png").c_str(), &width, &height, &nrChannels, 0);
@@ -111,6 +108,10 @@ void Renderer::Initiaize()
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
+        GLenum error = glGetError();
+        if(error != GL_NO_ERROR){
+            std::cout << "Error loading texture: " << gluErrorString(error) << std::endl;
+        }
     }
     else
     {
@@ -118,20 +119,26 @@ void Renderer::Initiaize()
     }
     stbi_image_free(data);
     m_shader->Use();
-    glUniform1i(glGetUniformLocation(m_shader->GetID(), "texture1"), 0);
+    m_shader->SetInt("texture1", 0);
     m_shader->SetInt("texture2", 1);
-
 }
 
 void Renderer::Render()
 {   
-    m_shader->Use();
-
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
 
+    glm::mat4 transform = glm::mat4(1.0f);
+    transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+    transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    m_shader->Use();
+
+    unsigned int transformLoc = glGetUniformLocation(m_shader->GetID(), "transform");
+    glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transform));
+    
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }

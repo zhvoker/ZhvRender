@@ -6,10 +6,10 @@
 class Renderer
 {
 public:
-    Renderer();
+    Renderer() = default;
     ~Renderer();
 
-    void Initiaize();
+    void Initialize();
 
     void Render();
 

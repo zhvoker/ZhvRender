@@ -6,7 +6,9 @@
 
 GuiApplication::GuiApplication(const char* window_title, int width, int height)
     : m_window_title(window_title), m_width(width), m_height(height)
-    {}
+    {
+
+    }
 
 GuiApplication::~GuiApplication(){    CleaUp(); }
 
@@ -26,28 +28,11 @@ bool GuiApplication::Initialize()
         return false;
     }
 
-    // 配置 glfw
-#if defined(IMGUI_IMPL_OPENGL_ES3)
-    // GL ES 3.0 + GLSL 300 es (WebGL 2.0)
-    const char* glsl_version = "#version 300 es";
+    const char* glsl_version = "#version 330 core";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-#elif defined(__APPLE__)
-    // GL 3.2 + GLSL 150
-    const char* glsl_version = "#version 150";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
-#else
-    // GL 3.0 + GLSL 130
-    const char* glsl_version = "#version 130";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
-    //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
-#endif
 
     m_window = glfwCreateWindow(m_width, m_height, m_window_title, nullptr, nullptr);
     if(!m_window)
@@ -61,6 +46,12 @@ bool GuiApplication::Initialize()
     glfwMakeContextCurrent(m_window);
     glfwSwapInterval(1);
 
+    // glad 初始化
+    if(!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    {
+        std::cout << "Failed to init GLAD" << std::endl;
+    }
+
     // 初始化ImGui
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -70,12 +61,9 @@ bool GuiApplication::Initialize()
 
     //初始化 Imgui
     ImGui_ImplGlfw_InitForOpenGL(m_window, true);
-#ifdef __EMSCRIPTEN__
-    ImGui_ImplGlfw_InstallEmscriptenCallbacks(m_window, "#canvas");
-#endif
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    renderer.Initiaize();
+    renderer.Initialize();
 
     return true;
 }
@@ -152,8 +140,8 @@ void GuiApplication::ProcessFrame()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    renderer.Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    renderer.Render();
     
     // 切换缓冲区
     glfwSwapBuffers(m_window);

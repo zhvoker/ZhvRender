@@ -55,4 +55,6 @@ private:
 
     const char* m_window_title;
     int m_width, m_height;
+
+    
 };

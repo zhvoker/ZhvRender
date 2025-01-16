@@ -16,5 +16,3 @@ echo "Running Cmake configuration..."
 cmake ../
 
 make
-
-cd ../bin

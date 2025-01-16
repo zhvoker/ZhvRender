@@ -39,7 +39,7 @@ public:
 private:
     void checkCompileErrors(unsigned int shader, std::string type)
     {
-        int success;
+        int success = 1;
         char infoLog[1024];
         if (type != "PROGRAM")
         {

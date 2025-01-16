@@ -25,7 +25,7 @@ Shader::Shader(const GLchar* vertex_path, const GLchar* fragment_path)
         fragment_shader_file.close();
         // 获取shader代码
         vertex_code = vertex_shader_stream.str();
-        fragment_code = vertex_shader_stream.str();
+        fragment_code = fragment_shader_stream.str();
     }
     catch(std::ifstream::failure e)
     {
@@ -40,7 +40,6 @@ Shader::Shader(const GLchar* vertex_path, const GLchar* fragment_path)
     vertex = glCreateShader(GL_VERTEX_SHADER);               // 创建顶点着色器
     glShaderSource(vertex, 1, &vertex_shader_code, NULL);    // 绑定vshader 和vshader 代码
     glCompileShader(vertex);                                 // 编译vshader
-
     checkCompileErrors(vertex, "VERTEX");
 
     //片段着色器
@@ -53,8 +52,9 @@ Shader::Shader(const GLchar* vertex_path, const GLchar* fragment_path)
     m_ID = glCreateProgram();
     glAttachShader(m_ID, vertex);
     glAttachShader(m_ID, fragment);
+
     glLinkProgram(m_ID);
-    checkCompileErrors(m_ID, "PROGRAMG");
+    checkCompileErrors(m_ID, "PROGRAM");
 
     // 释放着色器
     glDeleteShader(vertex);

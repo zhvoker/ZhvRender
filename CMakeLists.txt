@@ -16,6 +16,8 @@ set(CMAKE_BUILD_TYPE Debug)
 
 find_package(glfw3 REQUIRED)
 find_package(OpenGL REQUIRED)
+find_package(GLU REQUIRED)
+find_package(glm CONFIG REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
@@ -27,4 +29,4 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src SRC_FILES)
 
 add_executable(ZhvRender ${IMGUI_SRC_FILES} ${SRC_FILES} ${STB_SRC_FILES})
 
-target_link_libraries(ZhvRender GL glfw)
+target_link_libraries(ZhvRender GL glfw glm::glm GLU)
