@@ -140,8 +140,8 @@ void GuiApplication::ProcessFrame()
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     renderer.Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     
     // 切换缓冲区
     glfwSwapBuffers(m_window);
